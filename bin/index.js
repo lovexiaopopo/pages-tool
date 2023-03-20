@@ -1,54 +1,62 @@
 #!/usr/bin/env node
 
-// const program = require('commander');
-const inquirer = require('inquirer');
-// const pkg = require('../package.json');
-// const Watch=require('../lib/watch').init();
-// const init=require('../lib/init').init();
+const Init = require('../lib/init').init()
+const Watch = require('../lib/watch').init()
+const inquirer = require('inquirer')
 
-// program.command('init').description('对应用进行初始化,创建config目录、sub-packages目录、workers目录，这步不是必须，你也可以在今后的开发中，自己创建').action(function(cmd){
-// 	 init.start();
-// 	 console.log('inquirer----', inquirer)
-// });
+const commands = [{
+    type: 'list',
+    name: 'command',
+    message: '执行 init or watch ？',
+    choices: ['init', 'watch'],
+    // 对用户的回答进行转换，返回转换过的结果
+    filter(val) {
+      return val.toLowerCase();
+    },
+    default: 'init', // 注意：default 值为转化前的值
+  }]
 
-// program.command('watch').description('对相关文件及目录进行监控')
-// .action(function(){
-// 	  Watch.start();
-// });
-
-// program.version(pkg.version, '-v, --version').parse(process.argv)
-
-// const questions = [{
-// 		type: 'input',
-// 		name: 'dirs',
-// 		message: '请输入要配置的目录',
-// 		default: 'pages,config,sub-packages'
-// 	}, {
-// 		type: 'input',
-// 		name: 'files',
-// 		message: '请输入要配置的文件',
-// 		default: 'pages.json'
-// 	}]
-const questions = [{
+const initDirs = [{
 		type: 'input',
 		name: 'dirs',
 		message: '请输入要配置的目录',
-		default: 'pages,config,sub-packages,easy-com,global-style'
+		default: 'pages,config'
 	}]
 	
-let configDirs = []
+const watchDirs = [{
+		type: 'input',
+		name: 'dirs',
+		message: '请输入要监听的文件目录',
+		default: 'pages,config,os_project,tn_components'
+	}]
 	
-inquirer.prompt(questions).then(res => {
-	const configs = res.dirs
-	if (configs) {
-		if (configs.indexOf(',') > -1) {
-			configDirs = configs.split(',')
-		} else {
-			configDirs = configs
-		}
-		console.log('configDirs---', configDirs)
-	}
-}).catch(err => {
-	console.log('err', err.message)
-})
+let commKey = ''
+let configDirs = []
 
+inquirer.prompt(commands).then(res => {
+	commKey = res.command
+	if (commKey === 'init') {
+		inquirer.prompt(initDirs).then(res => {
+			const configs = res.dirs
+			if (configs) {
+				if (configs.indexOf(',') > -1) {
+					configDirs = configs.split(',')
+				} else {
+					configDirs = configs
+				}
+				Init.start(configDirs)
+			}
+		}).catch(err => {
+			console.log('err--initDirs', err)
+		})
+	} else if (commKey === 'watch') {
+		inquirer.prompt(watchDirs).then(res => {
+			const configs = res.dirs
+			if (configs) {
+				Watch.start(configs)
+			}
+		}).catch(err => {
+			console.log('err--watchDirs', err)
+		})
+	}
+})
